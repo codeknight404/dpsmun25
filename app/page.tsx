@@ -4,7 +4,7 @@
 import React, { useState, useEffect, JSX } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence, Variants, easeInOut } from 'framer-motion';
 import {
   Globe,
   Users,
@@ -22,6 +22,7 @@ import {
   Mail,
   Phone,
 } from 'lucide-react';
+import Image from 'next/image';
 
 // Animation variants
 const fadeInUp = {
@@ -49,7 +50,7 @@ const scaleIn = {
   visible: {
     scale: 1,
     opacity: 1,
-    transition: { duration: 0.6, ease: 'easeOut' },
+    transition: { duration: 0.6, ease: "easeOut" as const },
   },
 };
 
@@ -58,7 +59,7 @@ const slideInLeft = {
   visible: {
     x: 0,
     opacity: 1,
-    transition: { duration: 0.8, ease: 'easeOut' },
+    transition: { duration: 0.8, ease: easeInOut },
   },
 };
 
@@ -67,7 +68,7 @@ const slideInRight = {
   visible: {
     x: 0,
     opacity: 1,
-    transition: { duration: 0.8, ease: 'easeOut' },
+    transition: { duration: 0.8, ease: easeInOut },
   },
 };
 
@@ -211,7 +212,7 @@ export default function Home(): JSX.Element {
             <motion.div whileHover={{ scale: 1.05 }} className="flex items-center space-x-3">
               <div className="relative">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#bce2c7] to-[#dcebe3] rounded-full flex items-center justify-center shadow-lg">
-                  <img src="/logo.png" alt="DPM MUN Logo" />
+                  <Image src="/logo.png" alt="DPM MUN Logo" width={48} height={48} />
                 </div>
                 <motion.div
                   animate={{ rotate: 360 }}
@@ -370,7 +371,7 @@ export default function Home(): JSX.Element {
               <div className="relative p-8 rounded-3xl shadow-2xl backdrop-filter backdrop-blur-lg bg-white/30 border border-white/20">
                 <div className="text-center mb-6">
                   <div className="w-50 h-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <img src="/logo1.png" alt="DPM MUN Logo" />
+                    <Image src="/logo1.png" alt="DPM MUN Logo" width={200} height={200} />
                   </div>
                   <h3 className="text-2xl font-bold text-[#1A522A] mb-2">Conference Overview</h3>
                 </div>
