@@ -321,7 +321,7 @@ export default function Home(): JSX.Element {
               </motion.div>
 
               <motion.p variants={fadeInUp} className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Join us for an extraordinary diplomatic experience at Delhi Public School Jodhpur's flagship Model United Nations
+                Join us for an extraordinary diplomatic experience at Delhi Public School Jodhpur&apos;s flagship Model United Nations
                 conference. Where young minds shape the future through debate, diplomacy, and international cooperation.
               </motion.p>
 
