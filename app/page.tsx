@@ -73,7 +73,8 @@ const slideInRight = {
 
 // Waving Background Animation
 const waveBackground = {
-  animate: {
+  // Rename 'animate' to a variant name, e.g., 'wave'
+  wave: { // <--- Changed from 'animate' to 'wave'
     x: ['-20%', '20%', '-20%'],
     y: ['-20%', '20%', '-20%'],
     scale: [1, 1.1, 1],
@@ -193,7 +194,9 @@ export default function Home(): JSX.Element {
             filter: 'blur(150px)', // Stronger blur for fluid effect
             opacity: 0.8,
           }}
-          {...waveBackground}
+          // Apply the variants here, and then specify which variant to animate
+          variants={waveBackground} // <--- Pass the variant object here
+          animate="wave"           // <--- Tell Framer Motion to animate the 'wave' variant
         />
       </div>
 
