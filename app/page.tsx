@@ -4,7 +4,7 @@
 import React, { useState, useEffect, JSX } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
   Globe,
   Users,
@@ -72,9 +72,8 @@ const slideInRight = {
 };
 
 // Waving Background Animation
-const waveBackground = {
-  // Rename 'animate' to a variant name, e.g., 'wave'
-  wave: { // <--- Changed from 'animate' to 'wave'
+const waveBackground: Variants = { // <--- Added ': Variants' here
+  wave: {
     x: ['-20%', '20%', '-20%'],
     y: ['-20%', '20%', '-20%'],
     scale: [1, 1.1, 1],
