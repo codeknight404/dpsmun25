@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 // app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -17,7 +17,7 @@ export const authOptions = {
         email: { label: 'Email', type: 'email', placeholder: 'jsmith@example.com' },
         password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         await dbConnect();
 
         if (!credentials?.email || !credentials.password) {
@@ -59,7 +59,14 @@ export const authOptions = {
 
   // --- Callbacks ---
   callbacks: {
-    async signIn({ user, account, profile }: { user: any; account: any; profile?: any }) {
+    async signIn(params: {
+      user: import("next-auth").User;
+      account: import("next-auth").Account | null;
+      profile?: import("next-auth").Profile;
+      email?: { verificationRequest?: boolean };
+      credentials?: Record<string, unknown>;
+    }) {
+      const { user, account } = params;
       await dbConnect();
 
       if (account?.provider !== 'credentials') {
@@ -101,7 +108,7 @@ export const authOptions = {
       return true;
     },
 
-    async jwt({ token, user, account }: { token: any; user: any; account: any }) {
+    async jwt({ token, user }: { token: any; user: any }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
