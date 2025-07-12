@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
-
+import AuthNavButtons from '@/app/components/AuthNavButtons';
 import React, { useState, useEffect, JSX } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'; // Assuming this path is correct for your Button component
 import { motion, AnimatePresence, Variants, easeInOut } from 'framer-motion';
 import {
   Globe,
@@ -21,6 +21,8 @@ import {
   MapPin,
   Mail,
   Phone,
+  FileText,
+  UserCheck,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -50,7 +52,7 @@ const scaleIn = {
   visible: {
     scale: 1,
     opacity: 1,
-    transition: { duration: 0.6, ease: "easeOut" as const },
+    transition: { duration: 0.6, ease: 'easeOut' as const },
   },
 };
 
@@ -73,7 +75,7 @@ const slideInRight = {
 };
 
 // Waving Background Animation
-const waveBackground: Variants = { // <--- Added ': Variants' here
+const waveBackground: Variants = {
   wave: {
     x: ['-20%', '20%', '-20%'],
     y: ['-20%', '20%', '-20%'],
@@ -87,10 +89,114 @@ const waveBackground: Variants = { // <--- Added ': Variants' here
   },
 };
 
+// Modal Animation Variants
+const modalVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.8, y: -50 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: 'spring', damping: 20, stiffness: 300 },
+  },
+  exit: { opacity: 0, scale: 0.8, y: 50, transition: { duration: 0.2 } },
+};
+
+// Define Committee Interface for better type safety
+interface Committee {
+  name: string;
+  short: string;
+  description: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  delegates: number;
+  agenda: string;
+  chairpersons: string[];
+  rulesPdf: string; // URL to the PDF file
+  type: 'International' | 'National'; // New field for committee type
+}
+
+// Committee Detail Modal Component
+interface CommitteeDetailModalProps {
+  committee: Committee;
+  onClose: () => void;
+}
+
+const CommitteeDetailModal: React.FC<CommitteeDetailModalProps> = ({ committee, onClose }) => {
+  return (
+    <motion.div
+      className="fixed inset-0 flex items-center justify-center z-[100] p-4"
+      style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.5)', // Semi-transparent white
+        backdropFilter: 'blur(10px)', // Apply blur effect
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="bg-white rounded-3xl p-8 max-w-xl w-full mx-auto shadow-2xl relative border border-white/20 backdrop-filter backdrop-blur-lg text-[#1A522A]"
+        variants={modalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-[#1A522A] transition-colors"
+          aria-label="Close"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        <h2 className="text-3xl font-bold mb-4 text-center text-[#1A522A]">
+          {committee.name} ({committee.short})
+        </h2>
+        <p className="text-gray-700 text-center mb-6">{committee.description}</p>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-semibold mb-2 flex items-center">
+              <FileText className="w-5 h-5 mr-2 text-[#2E8B57]" /> Agenda
+            </h3>
+            <p className="text-gray-700">{committee.agenda}</p>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-2 flex items-center">
+              <UserCheck className="w-5 h-5 mr-2 text-[#2E8B57]" /> Chairpersons
+            </h3>
+            <ul className="list-disc list-inside text-gray-700">
+              {committee.chairpersons.map((chair, index) => (
+                <li key={index}>{chair}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-2 flex items-center">
+              <FileText className="w-5 h-5 mr-2 text-[#2E8B57]" /> Rules of Procedure
+            </h3>
+            <a
+              href={committee.rulesPdf}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center bg-gradient-to-r from-[#1A522A] to-[#2E8B57] text-white px-6 py-3 rounded-full font-medium shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              View PDF
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 export default function Home(): JSX.Element {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [isLoaded, setIsLoaded] = useState(false);
+  const [selectedCommittee, setSelectedCommittee] = useState<Committee | null>(null);
+  const [activeCommitteeType, setActiveCommitteeType] = useState<'All' | 'International' | 'National'>('All'); // New state for filtering
 
   useEffect(() => {
     setIsLoaded(true);
@@ -121,50 +227,101 @@ export default function Home(): JSX.Element {
     { icon: Star, number: '50+', label: 'Participating Schools', color: 'from-green-400 to-green-600' },
   ];
 
-  const committees = [
+  const allCommittees: Committee[] = [
     {
       name: 'United Nations Security Council',
       short: 'UNSC',
-      description: 'The primary body for maintaining international peace and security',
+      description: 'The primary body for maintaining international peace and security.',
       level: 'Advanced',
       delegates: 15,
+      agenda: 'Addressing the implications of emerging technologies on international peace and security.',
+      chairpersons: ['Ms. Anya Sharma', 'Mr. Rohan Gupta'],
+      rulesPdf: '/rules/UNSC_ROP.pdf',
+      type: 'International',
     },
     {
       name: 'United Nations General Assembly',
       short: 'UNGA',
-      description: 'The main deliberative assembly of the United Nations',
+      description: 'The main deliberative assembly of the United Nations, discussing global issues.',
       level: 'Intermediate',
       delegates: 25,
+      agenda: 'Rethinking global efforts for sustainable development and climate action.',
+      chairpersons: ['Dr. Priya Singh', 'Mr. Vivek Jain'],
+      rulesPdf: '/rules/UNGA_ROP.pdf',
+      type: 'International',
     },
     {
       name: 'United Nations Human Rights Council',
       short: 'UNHRC',
-      description: 'Promoting and protecting human rights around the globe',
+      description: 'Promoting and protecting human rights around the globe, addressing violations and challenges.',
       level: 'Advanced',
       delegates: 20,
+      agenda: 'The protection of human rights in conflict-affected areas, with a focus on humanitarian access.',
+      chairpersons: ['Prof. Elena Petrova', 'Ms. David Lee'],
+      rulesPdf: '/rules/UNHRC_ROP.pdf',
+      type: 'International',
     },
     {
       name: 'World Health Organization',
       short: 'WHO',
-      description: 'Directing international health within the United Nations',
+      description: 'Directing international health within the United Nations system, focusing on global health crises.',
       level: 'Beginner',
       delegates: 30,
+      agenda: 'Global preparedness and response to future pandemics: Lessons from COVID-19.',
+      chairpersons: ['Dr. Sanjeev Kumar', 'Ms. Emily White'],
+      rulesPdf: '/rules/WHO_ROP.pdf',
+      type: 'International',
     },
     {
       name: 'United Nations Environment Programme',
       short: 'UNEP',
-      description: 'Leading global environmental action',
+      description: 'Leading global environmental action, addressing climate change and biodiversity loss.',
       level: 'Intermediate',
       delegates: 25,
+      agenda: 'Strategies for promoting a circular economy and sustainable consumption patterns.',
+      chairpersons: ['Ms. Sarah Khan', 'Mr. Ben Carter'],
+      rulesPdf: '/rules/UNEP_ROP.pdf',
+      type: 'International',
     },
     {
       name: 'International Crisis Committee',
       short: 'ICC',
-      description: 'Fast-paced committee dealing with evolving global crises',
+      description: 'Fast-paced committee dealing with evolving global crises and requiring quick decision-making.',
       level: 'Advanced',
       delegates: 20,
+      agenda: 'Responding to a rapidly escalating geopolitical crisis in the Indo-Pacific region.',
+      chairpersons: ['Gen. Robert Johnson', 'Ms. Nina Patel'],
+      rulesPdf: '/rules/ICC_ROP.pdf',
+      type: 'International',
+    },
+    // --- National Committees ---
+    {
+      name: 'Lok Sabha',
+      short: 'LS',
+      description: 'The House of the People in the Indian Parliament, discussing legislative matters of national importance.',
+      level: 'Intermediate',
+      delegates: 40,
+      agenda: 'Deliberation on the implementation of Uniform Civil Code in India.',
+      chairpersons: ['Hon. Speaker Smt. Meenakshi Devi', 'Shri. Vikram Seth'],
+      rulesPdf: '/rules/LS_ROP.pdf',
+      type: 'National',
+    },
+    {
+      name: 'All India Political Parties Meet',
+      short: 'AIPPM',
+      description: 'A dynamic committee simulating a meeting of leaders from various Indian political parties to address pressing national issues.',
+      level: 'Advanced',
+      delegates: 35,
+      agenda: 'Discussing the future of farmer welfare policies and agricultural reforms in India.',
+      chairpersons: ['Dr. Anand Verma', 'Ms. Geetanjali Rao'],
+      rulesPdf: '/rules/AIPPM_ROP.pdf',
+      type: 'National',
     },
   ];
+
+  const filteredCommittees = allCommittees.filter(committee =>
+    activeCommitteeType === 'All' ? true : committee.type === activeCommitteeType
+  );
 
   const timeline = [
     { date: 'November 15, 2024', event: 'Registration Opens', status: 'completed' },
@@ -200,73 +357,43 @@ export default function Home(): JSX.Element {
         />
       </div>
 
-      {/* Navigation */}
+      {/* Header Section */}
       <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-md border-b border-gray-200 shadow-lg"
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+        className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-filter backdrop-blur-lg shadow-sm"
       >
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <motion.div whileHover={{ scale: 1.05 }} className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#bce2c7] to-[#dcebe3] rounded-full flex items-center justify-center shadow-lg">
-                  <Image src="/logo.png" alt="DPM MUN Logo" width={48} height={48} />
-                </div>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center"
-                >
-                  <Sparkles className="w-2 h-2 text-white" />
-                </motion.div>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-[#1A522A]">DPS MUN 8.0</h1>
-                <p className="text-sm text-[#2E8B57] font-medium">Jodhpur Chapter</p>
-              </div>
-            </motion.div>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-8">
-              {['Home', 'About', 'Committees', 'Timeline'].map((item) => (
-                <motion.a
-                  key={item}
-                  href={`#${item.toLowerCase()}`}
-                  whileHover={{ scale: 1.1 }}
-                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
-                    activeSection === item.toLowerCase()
-                      ? 'bg-gradient-to-r from-[#D6EEF8] to-[#E0F3F9] text-[#1A522A] font-semibold'
-                      : 'text-gray-600 hover:text-[#1A522A]'
-                  }`}
-                >
-                  {item}
-                </motion.a>
-              ))}
-            </nav>
-
-            {/* Desktop Auth Buttons */}
-            <div className="hidden md:flex space-x-4">
-              <Link href="/login">
-                <Button variant="ghost" className="text-[#1A522A] hover:bg-gradient-to-r from-[#D6EEF8] to-[#E0F3F9]">
-                  Login
-                </Button>
-              </Link>
-              <Link href="/register">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button className="bg-gradient-to-r from-[#1A522A] to-[#2E8B57] text-white hover:from-[#2E8B57] hover:to-[#1A522A] shadow-lg">
-                    Register Now
-                  </Button>
-                </motion.div>
-              </Link>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button className="md:hidden p-2" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center space-x-3">
+            <Image src="/logo1.png" alt="DPS MUN Logo" width={48} height={48} className="rounded-full" />
+            <span className="text-2xl font-bold text-[#1A522A]">DPS MUN 8.0</span>
           </div>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex space-x-8">
+            {['Home', 'About', 'Committees', 'Timeline'].map((item) => (
+              <motion.a
+                key={item}
+                href={`#${item.toLowerCase()}`}
+                whileHover={{ scale: 1.1 }}
+                className="px-4 py-2 rounded-full transition-all duration-300 text-gray-600 hover:text-[#1A522A]"
+              >
+                {item}
+              </motion.a>
+            ))}
+          </nav>
+
+          {/* Desktop Auth Buttons: Use the AuthNavButtons component */}
+          <div className="hidden md:flex">
+            <AuthNavButtons />
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button className="md:hidden p-2" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
 
         {/* Mobile Menu */}
@@ -290,16 +417,8 @@ export default function Home(): JSX.Element {
                   </a>
                 ))}
                 <div className="pt-4 border-t border-gray-200 space-y-2">
-                  <Link href="/login" className="block">
-                    <Button variant="ghost" className="w-full justify-start text-[#1A522A]">
-                      Login
-                    </Button>
-                  </Link>
-                  <Link href="/register" className="block">
-                    <Button className="w-full bg-gradient-to-r from-[#1A522A] to-[#2E8B57] text-white">
-                      Register Now
-                    </Button>
-                  </Link>
+                  {/* Mobile Auth Buttons: Use AuthNavButtons here too */}
+                  <AuthNavButtons />
                 </div>
               </div>
             </motion.div>
@@ -512,7 +631,7 @@ export default function Home(): JSX.Element {
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeInUp}
-            className="text-center mb-16"
+            className="text-center mb-10"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-[#1A522A] mb-6">Our Committees</h2>
             <p className="text-xl text-gray-700 max-w-3xl mx-auto">
@@ -521,43 +640,98 @@ export default function Home(): JSX.Element {
             </p>
           </motion.div>
 
+          {/* Committee Type Filters */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
-            variants={staggerChildren}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            variants={fadeInUp}
+            className="flex justify-center gap-4 mb-12"
           >
-            {committees.map((committee, index) => (
-              <motion.div
-                key={index}
-                variants={scaleIn}
-                whileHover={{ scale: 1.02, y: -5 }}
-                className="bg-white/50 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20 backdrop-filter backdrop-blur-lg"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-[#1A522A]">{committee.short}</h3>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      committee.level === 'Beginner'
-                        ? 'bg-green-100 text-green-800'
-                        : committee.level === 'Intermediate'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {committee.level}
-                  </span>
-                </div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-3">{committee.name}</h4>
-                <p className="text-gray-600 text-sm mb-4 leading-relaxed">{committee.description}</p>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Delegates: {committee.delegates}</span>
-                  <ChevronRight className="w-4 h-4 text-[#2E8B57]" />
-                </div>
-              </motion.div>
-            ))}
+            <Button
+              variant={activeCommitteeType === 'All' ? 'default' : 'outline'}
+              onClick={() => setActiveCommitteeType('All')}
+              className={`${
+                activeCommitteeType === 'All'
+                  ? 'bg-gradient-to-r from-[#1A522A] to-[#2E8B57] text-white'
+                  : 'border-[#1A522A] text-[#1A522A] hover:bg-[#D6EEF8]'
+              }`}
+            >
+              All Committees
+            </Button>
+            <Button
+              variant={activeCommitteeType === 'International' ? 'default' : 'outline'}
+              onClick={() => setActiveCommitteeType('International')}
+              className={`${
+                activeCommitteeType === 'International'
+                  ? 'bg-gradient-to-r from-[#1A522A] to-[#2E8B57] text-white'
+                  : 'border-[#1A522A] text-[#1A522A] hover:bg-[#D6EEF8]'
+              }`}
+            >
+              International
+            </Button>
+            <Button
+              variant={activeCommitteeType === 'National' ? 'default' : 'outline'}
+              onClick={() => setActiveCommitteeType('National')}
+              className={`${
+                activeCommitteeType === 'National'
+                  ? 'bg-gradient-to-r from-[#1A522A] to-[#2E8B57] text-white'
+                  : 'border-[#1A522A] text-[#1A522A] hover:bg-[#D6EEF8]'
+              }`}
+            >
+              National
+            </Button>
           </motion.div>
+
+          {/* Committee Grid - AnimatePresence ensures smooth filtering transitions */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              // Key the grid itself to trigger re-animation of its children when filter changes
+              key={activeCommitteeType}
+              initial="hidden"
+              animate="visible"
+              // variants={staggerChildren} // Apply stagger to the grid container
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              // Instead of staggerChildren on the parent, we'll apply individual animations with a delay
+            >
+              {filteredCommittees.map((committee, index) => (
+                <motion.div
+                  key={committee.name} // Unique key for each committee card for Framer Motion
+                  variants={scaleIn}
+                  initial="hidden" // Ensure individual cards start from hidden
+                  animate="visible" // Animate them to visible
+                  exit="hidden" // Animate them to hidden when removed from the DOM
+                  transition={{ delay: index * 0.05 }} // Optional: Add a slight delay for staggered entry
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  className="bg-white/50 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20 backdrop-filter backdrop-blur-lg cursor-pointer"
+                  onClick={() => setSelectedCommittee(committee)}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-[#1A522A]">{committee.short}</h3>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        committee.level === 'Beginner'
+                          ? 'bg-green-100 text-green-800'
+                          : committee.level === 'Intermediate'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {committee.level}
+                    </span>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-3">{committee.name}</h4>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">{committee.description}</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Delegates: {committee.delegates}</span>
+                    <button className="text-[#2E8B57] hover:text-[#1A522A] transition-colors focus:outline-none">
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </section>
 
@@ -669,6 +843,16 @@ export default function Home(): JSX.Element {
           &copy; {new Date().getFullYear()} DPS MUN Jodhpur. All rights reserved.
         </div>
       </footer>
+
+      {/* Committee Detail Modal */}
+      <AnimatePresence>
+        {selectedCommittee && (
+          <CommitteeDetailModal
+            committee={selectedCommittee}
+            onClose={() => setSelectedCommittee(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
