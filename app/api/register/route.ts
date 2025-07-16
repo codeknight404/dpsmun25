@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/register/route.ts
+// app/api/register/route.ts (Updated)
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
@@ -35,14 +35,15 @@ export async function POST(req: Request) {
       name,
       email,
       password,
-      isProfileComplete: true, // Credentials users are complete by default
+      isProfileComplete: false, // All new users (credential or social) start with incomplete profile
+      isApproved: false,        // All new users start as not approved
     });
 
     const userResponse = newUser.toObject();
     delete userResponse.password;
 
     return NextResponse.json(
-      { message: 'User registered successfully!', user: userResponse },
+      { message: 'User registered successfully! Please complete your profile.', user: userResponse },
       { status: 201 }
     );
   } catch (error: any) {

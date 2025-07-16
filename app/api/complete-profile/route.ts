@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/complete-profile/route.ts
+// app/api/complete-profile/route.ts (Updated)
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
@@ -26,6 +26,8 @@ export async function POST(req: Request) {
 
     const userId = session.user.id;
 
+    // Only update profile completion fields and set isProfileComplete to true.
+    // isApproved is intentionally NOT touched here, as it requires admin action.
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
